@@ -6,9 +6,11 @@ router = APIRouter(prefix="/api", tags=["Fornecedores"])
 
 # modelo de dados (Pydantic) para garantir integridade dos dados
 class FornecedoresCreate(BaseModel):
-    nome: str
-    cnpj: str
-    contato: str
+    nome_fornecedor: str
+    id_cnpj: str
+    telefone_fornecedor: str
+    email_fornecedor: str
+    endereco_fornecedor: str
 
 # integração com banco de dados
 fornecedores_db = []
@@ -25,9 +27,11 @@ def cafastrar_fornecedores(fornecedor: FornecedoresCreate):
 
     novo_fornecedor = {
         "id_fornecedor": len(fornecedores_db) + 1, # adiciona +1 fornecedor a lista simulada
-        "nome": fornecedor.nome,
-        "cnpj": fornecedor.cnpj,
-        "contato": fornecedor.contato
+        "nome_fornecedor": fornecedor.nome_fornecedor,
+        "cnpj": fornecedor.id_cnpj,
+        "telefone_fornecedor": fornecedor.telefone_fornecedor,
+        "email_fornecedor": fornecedor.email_fornecedor,
+        "endereco": fornecedor.endereco_fornecedor
     }
 
     fornecedores_db.append(novo_fornecedor) # realiza a contagem da simulação

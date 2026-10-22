@@ -1,56 +1,51 @@
 from fastapi import APIRouter, status
 from pydantic import BaseModel
 
+from .alertas import gerar_alertas
+
 # cria o roteador focado nas esteiras e no chão da fábrica
-router = APIRouter (prefix="/api", tags=["Equipamentos"])
+router = APIRouter(prefix="/api", tags=["Equipamentos"])
+
 
 # modelo de integridade
 class EquipamentoUpdate(BaseModel):
-    temperatura: float # temperatura do motor em ºC
+    id_esteira: str
+    nome_esteira: str
+    status_esteira: str
+    temperatura_esteira_c: float # temperatura_esteira_c do motor em ºC
+    velocidade_esteira_kmh: float
     peso_atual_kg: float # carga de peso da esteira
     travada: bool # True se houver travamento mecânico
 
 # integração com o banco de dados
 equipamentos_db = {
     "id_esteira": 1,
-    "nome": "Esteira Principal de Separação",
-    "status_operacional": "LIGADA",
-    "temperatura": 38.5,
-    "peso_atual_kh": 120.0,
+    "nome_esteira": "Esteira Principal de Separação",
+    "status_esteira": "LIGADA",
+    "temperatura_esteira_c": 38.5,
+    "velocidade_esteira_kmh": 4.0,
+    "peso_esteira_kg": 120.0,
     "travada": False
 }
 
-# consultar status do equipamentos e dados
+
+# consultar status do equipamento e dados
 @router.get("/equipamentos")
 def consultar_equipamentos():
-
     return equipamentos_db
+
 
 # atualizar status da esteira
 @router.post("/equipamentos/status", status_code=status.HTTP_200_OK)
 def atualizar_dados_esteira(dados: EquipamentoUpdate):
-
     # ponte com o middleware em php, recebe as leituras do sensor físico para avaliação dentro da api
-    alertas_gerados = []
-    status_calculado = "LIGADA"
-
-    if dados.peso_atual_kg > 500.0: # regra de sobrepeso
-        alertas_gerados.append("ALERTA! SOBRECARGA DE PESO DETECTADA")
-
-    if dados.temperatura > 50.0: # regra de superaquecimento
-        alertas_gerados.append("ALERTA! SUPERAQUECIMENTO DO MOTOR")
-
-    if  dados.travada: # trava por dejeto
-        alertas_gerados.append("ALERTA! ESTEIRA TRAVADA POR SEGURANÇA")
+    alertas_gerados = gerar_alertas(dados.temperatura, dados.peso_atual_kg, dados.travada)
 
     # problemas graves alteram o status da esteira
-    if len(alertas_gerados) > 0:
-        status_calculado = "ESTEIRA DESLIGADA"
-    else:
-        status_calculado = "LIGADA"
+    status_calculado = "ESTEIRA DESLIGADA" if alertas_gerados else "LIGADA"
 
-    equipamentos_db["status_operacional"] = status_calculado
-    equipamentos_db["temperatura"] = dados.temperatura
+    equipamentos_db["status_esteira"] = status_calculado
+    equipamentos_db["temperatura_esteira_c"] = dados.temperatura_esteira_c
     equipamentos_db["peso_atual_kg"] = dados.peso_atual_kg
     equipamentos_db["travada"] = dados.travada
 
@@ -59,8 +54,8 @@ def atualizar_dados_esteira(dados: EquipamentoUpdate):
         "estado_atual": equipamentos_db,
         "alertas_seguranca": alertas_gerados,
         "acao_tomada": (
-            "Sistema operando ormalmente"
-            if len(alertas_gerados) == 0
-            else "DESLIGAMENTOS DE SEGURANÇA ACIONADO"
-        )
+            "Sistema operando normalmente"
+            if not alertas_gerados
+            else "DESLIGAMENTO DE SEGURANÇA ACIONADO"
+        ),
     }

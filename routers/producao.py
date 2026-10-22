@@ -1,27 +1,40 @@
 from fastapi import APIRouter, status
 from pydantic import BaseModel
+from datetime import datetime
 
 # cria o roteador focado nas operações internas e no dashboard
 router = APIRouter (prefix="/api", tags=["Produção e Dashboard"])
 
 # modelo de integridade de dados
 class ProducaoCreate(BaseModel):
-
+    id_producao: str
+    id_lote: str
     turno: str  # Ex: manhã, tarde, noite
-    material_processado: str # Ex: "plástico PET"
+    id_usuario: str
+    id_esteira: str
+    id_material: str # Ex: "plástico PET"
     quantidade_entrada_kg: float # peso bruto que entrou na linha de produção
     quantidade_saida_kg: float   # Peso limpo/enfardado gerado após separação
-    refugo_kg: float # material descartado/impróprio
+    rejeito_kg: float # material descartado/impróprio
+    status_producao: str
+    data_inicio: datetime
+    date_fim: datetime
 
 # integração com o banco de dados
 producao_db = [
     {
         "id_producao": 1,
+        "id_lote": 7563,
         "turno": "Manhã",
-        "material_processados": "Plástico PET",
+        "id_usuario": 15,
+        "id_esteira": 1250,
+        "id_material": "Plástico PET",
         "quantidade_entrada_kg": 450.0,
         "quantidade_saida_kg": 100.0,
-        "refugo_kg": 10.0
+        "rejeito_kg": 10.0,
+        "status_producao":str,
+        "data_inicio": 10/10/2026,
+        "data_fim": 17/10/2026
     }
 ]
 
@@ -35,11 +48,17 @@ def listar_producao():
 def registrar_producao(producao: ProducaoCreate):
     nova_producao = {
         "id_producao": len(producao_db) + 1,
+        "id_lote": producao.id_lote,
         "turno": producao.turno,
-        "material_processado": producao.material_processado,
+        "id_usuario": producao.id_usuario,
+        "id_esteira": producao.id_esteira,
+        "id_material": producao.id_material,
         "quantidade_entrada_kg": producao.quantidade_entrada_kg,
         "quantidade_saida_kg": producao.quantidade_saida_kg,
-        "refugo_kg": producao.refugo_kg
+        "rejeito_kg": producao.rejeito_kg,
+        "status_producao": producao.status_producao,
+        "data_inicio": 18/10/2026,
+        "data_fim": 21/10/2026
     }
 
     producao_db.append(nova_producao)
@@ -54,7 +73,7 @@ def registrar_producao(producao: ProducaoCreate):
 def Dashboard_diario():
     total_entrada = sum(item["quantidade_entrada_kg"] for item in producao_db)
     total_saida = sum(item["quantidade_saida_kg"] for item in producao_db)
-    total_refugo = sum(item["refugo_kg"] for item in producao_db)
+    total_rejeito = sum(item["rejeito_kg"] for item in producao_db)
 
     # calculo da reciclagem
     percentual = (total_saida / total_entrada * 100) if total_entrada > 0 else 0.0
@@ -65,7 +84,7 @@ def Dashboard_diario():
         "balanco_massas_kg": {
             "total_material_entrada": total_entrada,
             "total_produzido_saida": total_saida,
-            "total_rejeitos_perdas": total_refugo
+            "total_rejeitos_perdas": total_rejeito
         },
         "indicadores_desempenho": {
             "aproveitamento_percentual": round(percentual, 2)

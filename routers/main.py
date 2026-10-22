@@ -113,3 +113,26 @@ app.include_router(producao.router)
 @app.get("/", tags=["Início"])
 def home():
     return {"mensagem": "API está online e operacional!"}
+
+
+from fastapi import FastAPI
+from routers import fornecedores, materiais, lotes, equipamentos, producao, alertas  # Importa o arquivo alertas.py
+
+app = FastAPI(
+    title="EcoCycle API - Backend (Equipe 2)",
+    version="1.0.0",
+    description="Núcleo de serviços e API REST para o sistema de reciclagem inteligente."
+)
+
+# ativa a rota de alertas
+app.include_router(auth.router)
+app.include_router(fornecedores.router)
+app.include_router(materiais.router)
+app.include_router(lotes.router)
+app.include_router(equipamentos.router)
+app.include_router(producao.router)  
+app.include_router(alertas.router) 
+
+@app.get("/", tags=["Início"])
+def home():
+    return {"mensagem": "API está online e operacional!"}

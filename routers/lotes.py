@@ -1,14 +1,17 @@
 from fastapi import APIRouter, status
 from pydantic import BaseModel
+from datetime import datetime
 
 #cria o  roteador de lotes
 router = APIRouter(prefix= "/api", tags=["Lotes"])
 
 # modelo de integridade de dados
 class LoteCreate(BaseModel):
+    id_lote: str
     id_fornecedor: int
-    tipo_material: str
-    peso_inicial_kg: float
+    status_lote: str
+    peso_recebido_kg: float
+    data_entrada: datetime
     observacao: str
 
 # integração com banco de dados
@@ -16,8 +19,9 @@ lotes_db = [
     {
         "id_lote": 1,
         "id_fornecedor": 1,
-        "tipo-material": "Plástico PET",
-        "peso_inicial_kg": 450.5,
+        "status_lote": "Aceito",
+        "peso_recebido_kg": 450.5,
+        "data_entrada": "22/10/2026",
         "observacao": "Lote limpo entregue pela cooperativa parceira." 
     }
 ]
@@ -34,8 +38,9 @@ def cadastrar_lote(lote: LoteCreate):
     novo_lote = {
         "id_lote": len(lotes_db) + 1,
         "id_fornecedor": lote.id_fornecedor,
-        "tipo_material": lote.tipo_material,
-        "peso_inicial_kg": lote.peso_inicial_kg,
+        "status_lote": lote.status_lote,
+        "peso_recebido_kg": lote.peso_recebido_kg,
+        "data_entrada": lote.data_entrada,
         "observacao": lote.observacao
     }
 
