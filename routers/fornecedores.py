@@ -1,21 +1,16 @@
 from fastapi import  APIRouter, status
-from pydantic import BaseModel
+# Modelo movido para schemas; importação preserva o acesso pelo módulo original.
+from schemas.fornecedores import FornecedoresCreate
 
 # roteador para área de fornecedores
 router = APIRouter(prefix="/api", tags=["Fornecedores"])
 
-# modelo de dados (Pydantic) para garantir integridade dos dados
-class FornecedoresCreate(BaseModel):
-    nome: str
-    cnpj: str
-    contato: str
-
-# integração com banco de dados
+# Armazenamento simulado em memória; ainda não persiste no Supabase.
 fornecedores_db = []
 
 # consulta todos os fornecedores cadastrados
 @router.get("/fornecedores")
-def listar_fornecedores(): 
+def listar_fornecedores():
 
     return{"fornecedores": fornecedores_db}
 

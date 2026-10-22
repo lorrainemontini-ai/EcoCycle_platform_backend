@@ -1,19 +1,11 @@
 from fastapi import APIRouter, status
-from pydantic import BaseModel
+# Modelo movido para schemas; importação preserva o acesso pelo módulo original.
+from schemas.producao import ProducaoCreate
 
 # cria o roteador focado nas operações internas e no dashboard
 router = APIRouter (prefix="/api", tags=["Produção e Dashboard"])
 
-# modelo de integridade de dados
-class ProducaoCreate(BaseModel):
-
-    turno: str  # Ex: manhã, tarde, noite
-    material_processado: str # Ex: "plástico PET"
-    quantidade_entrada_kg: float # peso bruto que entrou na linha de produção
-    quantidade_saida_kg: float   # Peso limpo/enfardado gerado após separação
-    refugo_kg: float # material descartado/impróprio
-
-# integração com o banco de dados
+# Armazenamento simulado em memória; ainda não persiste no Supabase.
 producao_db = [
     {
         "id_producao": 1,
@@ -26,7 +18,9 @@ producao_db = [
 ]
 
 # consultar todos os registros da produção
-@router.get("//producao")
+# Caminho corrigido; o endereço antigo continua disponível para compatibilidade.
+@router.get("//producao", include_in_schema=False)
+@router.get("/producao")
 def listar_producao():
     return {"registros_producao": producao_db}
 

@@ -1,16 +1,11 @@
 from fastapi import APIRouter, status
-from pydantic import BaseModel
+# Modelo movido para schemas; importação preserva o acesso pelo módulo original.
+from schemas.equipamentos import EquipamentoUpdate
 
 # cria o roteador focado nas esteiras e no chão da fábrica
 router = APIRouter (prefix="/api", tags=["Equipamentos"])
 
-# modelo de integridade
-class EquipamentoUpdate(BaseModel):
-    temperatura: float # temperatura do motor em ºC
-    peso_atual_kg: float # carga de peso da esteira
-    travada: bool # True se houver travamento mecânico
-
-# integração com o banco de dados
+# Armazenamento simulado em memória; ainda não persiste no Supabase.
 equipamentos_db = {
     "id_esteira": 1,
     "nome": "Esteira Principal de Separação",

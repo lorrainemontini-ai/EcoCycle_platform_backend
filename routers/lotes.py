@@ -1,24 +1,18 @@
 from fastapi import APIRouter, status
-from pydantic import BaseModel
+# Modelo movido para schemas; importação preserva o acesso pelo módulo original.
+from schemas.lotes import LoteCreate
 
 #cria o  roteador de lotes
 router = APIRouter(prefix= "/api", tags=["Lotes"])
 
-# modelo de integridade de dados
-class LoteCreate(BaseModel):
-    id_fornecedor: int
-    tipo_material: str
-    peso_inicial_kg: float
-    observacao: str
-
-# integração com banco de dados
+# Armazenamento simulado em memória; ainda não persiste no Supabase.
 lotes_db = [
     {
         "id_lote": 1,
         "id_fornecedor": 1,
         "tipo-material": "Plástico PET",
         "peso_inicial_kg": 450.5,
-        "observacao": "Lote limpo entregue pela cooperativa parceira." 
+        "observacao": "Lote limpo entregue pela cooperativa parceira."
     }
 ]
 
