@@ -1,0 +1,756 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "EcoCycle API - Backend (Equipe 2)",
+    "description": "Núcleo de serviços e API REST para o sistema de reciclagem inteligente.\n\nMódulos: autenticação, fornecedores, materiais, lotes, equipamentos (esteira) e produção/dashboard. Os dados são simulados em memória (sem banco de dados).",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/login": {
+      "post": {
+        "tags": [
+          "Autenticação e Segurança"
+        ],
+        "summary": "Autenticar usuário",
+        "description": "Valida `usuario` e `senha` e devolve o perfil de acesso.\n\nPerfis possíveis: **ADMINISTRADOR** e **OPERADOR**.",
+        "operationId": "autenticar_usuario_api_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Autenticação realizada com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "example": {
+                  "mensagem": "Autenticação realizada com sucesso!",
+                  "perfil": "OPERADOR",
+                  "acesso_liberado": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Usuário ou senha inválidos.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Acesso negado: Usuário ou senha inválidos."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/fornecedores": {
+      "get": {
+        "tags": [
+          "Fornecedores"
+        ],
+        "summary": "Listar fornecedores",
+        "description": "Retorna todos os fornecedores cadastrados. A lista fica vazia até o primeiro cadastro.",
+        "operationId": "listar_fornecedores_api_fornecedores_get",
+        "responses": {
+          "200": {
+            "description": "Lista de fornecedores cadastrados.",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "example": {
+                  "fornecedores": [
+                    {
+                      "id_fornecedor": 1,
+                      "nome": "Cooperativa Verde Vida",
+                      "cnpj": "12.345.678/0001-90",
+                      "contato": "contato@verdevida.com.br"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Fornecedores"
+        ],
+        "summary": "Cadastrar fornecedor",
+        "description": "Cadastra um novo fornecedor. O `id_fornecedor` é gerado automaticamente de forma sequencial.",
+        "operationId": "cafastrar_fornecedores_api_fornecedores_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FornecedoresCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Fornecedor cadastrado com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "example": {
+                  "mensagem": "Fornecedor cadastrado com sucesso!",
+                  "fornecedor": {
+                    "id_fornecedor": 1,
+                    "nome": "Cooperativa Verde Vida",
+                    "cnpj": "12.345.678/0001-90",
+                    "contato": "contato@verdevida.com.br"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Erro de validação: campo obrigatório ausente ou com tipo inválido."
+          }
+        }
+      }
+    },
+    "/api/materiais": {
+      "get": {
+        "tags": [
+          "Materiais"
+        ],
+        "summary": "Listar materiais",
+        "description": "Retorna todos os materiais cadastrados no sistema, com tipo, classificação e destino.",
+        "operationId": "listar_materiais_api_materiais_get",
+        "responses": {
+          "200": {
+            "description": "Lista de materiais cadastrados.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Materiais"
+        ],
+        "summary": "Cadastrar material",
+        "description": "Cadastra um novo tipo de material (útil em caso de ampliação do sistema). O `id_material` é gerado automaticamente de forma sequencial.",
+        "operationId": "cadastrar_material_api_materiais_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaterialCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Material cadastrado com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "example": {
+                  "mensagem": "Material cadastrado com sucesso!",
+                  "material": {
+                    "id_material": 2,
+                    "tipo": "Metal",
+                    "classificacao": "Alumínio",
+                    "destino": "Esteira 02"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Erro de validação: campo obrigatório ausente ou com tipo inválido."
+          }
+        }
+      }
+    },
+    "/api/lotes": {
+      "get": {
+        "tags": [
+          "Lotes"
+        ],
+        "summary": "Listar lotes",
+        "description": "Retorna todos os lotes de material recebidos dos fornecedores.",
+        "operationId": "listar_lotes_api_lotes_get",
+        "responses": {
+          "200": {
+            "description": "Lista de lotes cadastrados.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Lotes"
+        ],
+        "summary": "Cadastrar lote",
+        "description": "Registra um novo lote recebido. O `id_lote` é gerado automaticamente de forma sequencial.",
+        "operationId": "cadastrar_lote_api_lotes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoteCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Lote registrado com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "example": {
+                  "mensagem": "Lote  registrado com sucesso!",
+                  "lote": {
+                    "id_lote": 2,
+                    "id_fornecedor": 1,
+                    "tipo_material": "Plástico PET",
+                    "peso_inicial_kg": 450.5,
+                    "observacao": "Lote limpo entregue pela cooperativa parceira."
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Erro de validação: campo obrigatório ausente ou com tipo inválido."
+          }
+        }
+      }
+    },
+    "/api/equipamentos": {
+      "get": {
+        "tags": [
+          "Equipamentos"
+        ],
+        "summary": "Consultar status da esteira",
+        "description": "Retorna o estado atual da esteira: nome, status operacional, temperatura, peso atual e se está travada.",
+        "operationId": "consultar_equipamentos_api_equipamentos_get",
+        "responses": {
+          "200": {
+            "description": "Estado atual do equipamento.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/equipamentos/status": {
+      "post": {
+        "tags": [
+          "Equipamentos"
+        ],
+        "summary": "Atualizar leituras da esteira",
+        "description": "Recebe as leituras do sensor físico (via middleware em PHP), avalia as regras de segurança e atualiza o estado da esteira.\n\n**Regras de segurança:**\n- `peso_atual_kg` > 500.0 → alerta de sobrecarga de peso\n- `temperatura` > 50.0 → alerta de superaquecimento do motor\n- `travada` = true → alerta de esteira travada por segurança\n\nSe houver qualquer alerta, o status da esteira passa a `ESTEIRA DESLIGADA`; caso contrário, permanece `LIGADA`.",
+        "operationId": "atualizar_dados_esteira_api_equipamentos_status_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EquipamentoUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Leituras processadas, com alertas e ação tomada.",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "example": {
+                  "mensagem": "Dados do middleware processados com sucesso",
+                  "estado_atual": {
+                    "id_esteira": 1,
+                    "nome": "Esteira Principal de Separação",
+                    "status_operacional": "ESTEIRA DESLIGADA",
+                    "temperatura": 55.0,
+                    "peso_atual_kg": 120.0,
+                    "travada": false
+                  },
+                  "alertas_seguranca": [
+                    "ALERTA! SUPERAQUECIMENTO DO MOTOR"
+                  ],
+                  "acao_tomada": "DESLIGAMENTOS DE SEGURANÇA ACIONADO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Erro de validação: campo obrigatório ausente ou com tipo inválido."
+          }
+        }
+      }
+    },
+    "/api//producao": {
+      "get": {
+        "tags": [
+          "Produção e Dashboard"
+        ],
+        "summary": "Listar registros de produção",
+        "description": "Retorna todos os ciclos de produção registrados (turno, material, entrada, saída e refugo).",
+        "operationId": "listar_producao_api__producao_get",
+        "responses": {
+          "200": {
+            "description": "Lista de registros de produção.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/producao": {
+      "post": {
+        "tags": [
+          "Produção e Dashboard"
+        ],
+        "summary": "Registrar ciclo de produção",
+        "description": "Registra um novo ciclo de produção de um turno. O `id_producao` é gerado automaticamente de forma sequencial.",
+        "operationId": "registrar_producao_api_producao_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProducaoCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Ciclo de produção registrado com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "example": {
+                  "mensagem": "Ciclo de produção registrado com sucesso!",
+                  "producao": {
+                    "id_producao": 2,
+                    "turno": "Tarde",
+                    "material_processado": "Plástico PET",
+                    "quantidade_entrada_kg": 450.0,
+                    "quantidade_saida_kg": 380.0,
+                    "refugo_kg": 10.0
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Erro de validação: campo obrigatório ausente ou com tipo inválido."
+          }
+        }
+      }
+    },
+    "/api/producao/dashboard-diario": {
+      "get": {
+        "tags": [
+          "Produção e Dashboard"
+        ],
+        "summary": "Dashboard diário de produção",
+        "description": "Consolida todos os registros de produção: balanço de massas (entrada, saída e rejeitos) e o aproveitamento percentual, calculado como `saída / entrada × 100` (0.0 quando não há entrada).",
+        "operationId": "Dashboard_diario_api_producao_dashboard_diario_get",
+        "responses": {
+          "200": {
+            "description": "Dashboard consolidado com balanço de massas e indicadores.",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "example": {
+                  "indicador": "Dashboard Consolidado Diário - EcoCycle",
+                  "total_turnos_registrados": 1,
+                  "balanco_massas_kg": {
+                    "total_material_entrada": 450.0,
+                    "total_produzido_saida": 100.0,
+                    "total_rejeitos_perdas": 10.0
+                  },
+                  "indicadores_desempenho": {
+                    "aproveitamento_percentual": 22.22
+                  },
+                  "detalhado_por_turno": []
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "Início"
+        ],
+        "summary": "Status da API",
+        "description": "Retorna uma mensagem confirmando que a API está online.",
+        "operationId": "home__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "EquipamentoUpdate": {
+        "properties": {
+          "temperatura": {
+            "type": "number",
+            "title": "Temperatura",
+            "description": "Temperatura do motor, em ºC. Acima de 50.0 gera alerta de superaquecimento.",
+            "examples": [
+              38.5
+            ]
+          },
+          "peso_atual_kg": {
+            "type": "number",
+            "title": "Peso Atual Kg",
+            "description": "Carga de peso da esteira, em kg. Acima de 500.0 gera alerta de sobrecarga.",
+            "examples": [
+              120.0
+            ]
+          },
+          "travada": {
+            "type": "boolean",
+            "title": "Travada",
+            "description": "`true` se houver travamento mecânico (gera alerta e desliga a esteira).",
+            "examples": [
+              false
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "temperatura",
+          "peso_atual_kg",
+          "travada"
+        ],
+        "title": "EquipamentoUpdate"
+      },
+      "FornecedoresCreate": {
+        "properties": {
+          "nome": {
+            "type": "string",
+            "title": "Nome",
+            "description": "Nome ou razão social do fornecedor.",
+            "examples": [
+              "Cooperativa Verde Vida"
+            ]
+          },
+          "cnpj": {
+            "type": "string",
+            "title": "Cnpj",
+            "description": "CNPJ do fornecedor.",
+            "examples": [
+              "12.345.678/0001-90"
+            ]
+          },
+          "contato": {
+            "type": "string",
+            "title": "Contato",
+            "description": "Contato do fornecedor (telefone ou e-mail).",
+            "examples": [
+              "contato@verdevida.com.br"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "nome",
+          "cnpj",
+          "contato"
+        ],
+        "title": "FornecedoresCreate"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LoginRequest": {
+        "properties": {
+          "usuario": {
+            "type": "string",
+            "title": "Usuario",
+            "description": "Nome de usuário. Perfis existentes: `admin` e `operador`.",
+            "examples": [
+              "operador"
+            ]
+          },
+          "senha": {
+            "type": "string",
+            "title": "Senha",
+            "description": "Senha do usuário.",
+            "examples": [
+              "sua_senha"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "usuario",
+          "senha"
+        ],
+        "title": "LoginRequest"
+      },
+      "LoteCreate": {
+        "properties": {
+          "id_fornecedor": {
+            "type": "integer",
+            "title": "Id Fornecedor",
+            "description": "ID do fornecedor que entregou o lote.",
+            "examples": [
+              1
+            ]
+          },
+          "tipo_material": {
+            "type": "string",
+            "title": "Tipo Material",
+            "description": "Tipo de material do lote.",
+            "examples": [
+              "Plástico PET"
+            ]
+          },
+          "peso_inicial_kg": {
+            "type": "number",
+            "title": "Peso Inicial Kg",
+            "description": "Peso inicial do lote, em quilogramas.",
+            "examples": [
+              450.5
+            ]
+          },
+          "observacao": {
+            "type": "string",
+            "title": "Observacao",
+            "description": "Observações sobre o lote.",
+            "examples": [
+              "Lote limpo entregue pela cooperativa parceira."
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_fornecedor",
+          "tipo_material",
+          "peso_inicial_kg",
+          "observacao"
+        ],
+        "title": "LoteCreate"
+      },
+      "MaterialCreate": {
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "title": "Tipo",
+            "description": "Tipo do material (plástico ou metal).",
+            "examples": [
+              "Plástico"
+            ]
+          },
+          "classificacao": {
+            "type": "string",
+            "title": "Classificacao",
+            "description": "Classificação do material (PET, PEAD, alumínio, ferro).",
+            "examples": [
+              "PET"
+            ]
+          },
+          "destino": {
+            "type": "string",
+            "title": "Destino",
+            "description": "Destino do material (esteira e setor).",
+            "examples": [
+              "Esteira 01"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "tipo",
+          "classificacao",
+          "destino"
+        ],
+        "title": "MaterialCreate"
+      },
+      "ProducaoCreate": {
+        "properties": {
+          "turno": {
+            "type": "string",
+            "title": "Turno",
+            "description": "Turno de trabalho (manhã, tarde, noite).",
+            "examples": [
+              "Manhã"
+            ]
+          },
+          "material_processado": {
+            "type": "string",
+            "title": "Material Processado",
+            "description": "Material processado no turno.",
+            "examples": [
+              "Plástico PET"
+            ]
+          },
+          "quantidade_entrada_kg": {
+            "type": "number",
+            "title": "Quantidade Entrada Kg",
+            "description": "Peso bruto que entrou na linha de produção, em kg.",
+            "examples": [
+              450.0
+            ]
+          },
+          "quantidade_saida_kg": {
+            "type": "number",
+            "title": "Quantidade Saida Kg",
+            "description": "Peso limpo/enfardado gerado após a separação, em kg.",
+            "examples": [
+              100.0
+            ]
+          },
+          "refugo_kg": {
+            "type": "number",
+            "title": "Refugo Kg",
+            "description": "Material descartado/impróprio, em kg.",
+            "examples": [
+              10.0
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "turno",
+          "material_processado",
+          "quantidade_entrada_kg",
+          "quantidade_saida_kg",
+          "refugo_kg"
+        ],
+        "title": "ProducaoCreate"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Início",
+      "description": "Verificação de disponibilidade da API."
+    },
+    {
+      "name": "Autenticação e Segurança",
+      "description": "Login e perfil de acesso (administrador ou operador)."
+    },
+    {
+      "name": "Fornecedores",
+      "description": "Cadastro e consulta de fornecedores de material."
+    },
+    {
+      "name": "Materiais",
+      "description": "Cadastro e consulta dos tipos de material (plástico, metal etc.)."
+    },
+    {
+      "name": "Lotes",
+      "description": "Registro e consulta dos lotes recebidos dos fornecedores."
+    },
+    {
+      "name": "Equipamentos",
+      "description": "Monitoramento da esteira e regras de segurança (peso, temperatura e travamento)."
+    },
+    {
+      "name": "Produção e Dashboard",
+      "description": "Registro de ciclos de produção e indicadores consolidados."
+    }
+  ]
+}

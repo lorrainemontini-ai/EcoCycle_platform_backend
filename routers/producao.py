@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # cria o roteador focado nas operações internas e no dashboard
 router = APIRouter (prefix="/api", tags=["Produção e Dashboard"])
@@ -7,11 +7,11 @@ router = APIRouter (prefix="/api", tags=["Produção e Dashboard"])
 # modelo de integridade de dados
 class ProducaoCreate(BaseModel):
 
-    turno: str  # Ex: manhã, tarde, noite
-    material_processado: str # Ex: "plástico PET"
-    quantidade_entrada_kg: float # peso bruto que entrou na linha de produção
-    quantidade_saida_kg: float   # Peso limpo/enfardado gerado após separação
-    refugo_kg: float # material descartado/impróprio
+    turno: str = Field(description="Turno de trabalho (manhã, tarde, noite).", examples=["Manhã"])  # Ex: manhã, tarde, noite
+    material_processado: str = Field(description="Material processado no turno.", examples=["Plástico PET"]) # Ex: "plástico PET"
+    quantidade_entrada_kg: float = Field(description="Peso bruto que entrou na linha de produção, em kg.", examples=[450.0]) # peso bruto que entrou na linha de produção
+    quantidade_saida_kg: float = Field(description="Peso limpo/enfardado gerado após a separação, em kg.", examples=[100.0])   # Peso limpo/enfardado gerado após separação
+    refugo_kg: float = Field(description="Material descartado/impróprio, em kg.", examples=[10.0]) # material descartado/impróprio
 
 # integração com o banco de dados
 producao_db = [
@@ -26,12 +26,43 @@ producao_db = [
 ]
 
 # consultar todos os registros da produção
-@router.get("//producao")
+@router.get(
+    "//producao",
+    summary="Listar registros de produção",
+    description="Retorna todos os ciclos de produção registrados (turno, material, entrada, saída e refugo).",
+    response_description="Lista de registros de produção.",
+)
 def listar_producao():
     return {"registros_producao": producao_db}
 
 # registrar nova producao
-@router.post("/producao", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/producao",
+    status_code=status.HTTP_201_CREATED,
+    summary="Registrar ciclo de produção",
+    description="Registra um novo ciclo de produção de um turno. O `id_producao` é gerado automaticamente de forma sequencial.",
+    response_description="Ciclo de produção registrado com sucesso.",
+    responses={
+        201: {
+            "content": {
+                "application/json": {
+                    "example": {
+                        "mensagem": "Ciclo de produção registrado com sucesso!",
+                        "producao": {
+                            "id_producao": 2,
+                            "turno": "Tarde",
+                            "material_processado": "Plástico PET",
+                            "quantidade_entrada_kg": 450.0,
+                            "quantidade_saida_kg": 380.0,
+                            "refugo_kg": 10.0
+                        }
+                    }
+                }
+            }
+        },
+        422: {"description": "Erro de validação: campo obrigatório ausente ou com tipo inválido."},
+    },
+)
 def registrar_producao(producao: ProducaoCreate):
     nova_producao = {
         "id_producao": len(producao_db) + 1,
@@ -50,7 +81,35 @@ def registrar_producao(producao: ProducaoCreate):
     }
 
 # relatório de toda produção e produto que da entrada e saída
-@router.get("/producao/dashboard-diario")
+@router.get(
+    "/producao/dashboard-diario",
+    summary="Dashboard diário de produção",
+    description=(
+        "Consolida todos os registros de produção: balanço de massas (entrada, saída e rejeitos) "
+        "e o aproveitamento percentual, calculado como `saída / entrada × 100` "
+        "(0.0 quando não há entrada)."
+    ),
+    response_description="Dashboard consolidado com balanço de massas e indicadores.",
+    responses={
+        200: {
+            "content": {
+                "application/json": {
+                    "example": {
+                        "indicador": "Dashboard Consolidado Diário - EcoCycle",
+                        "total_turnos_registrados": 1,
+                        "balanco_massas_kg": {
+                            "total_material_entrada": 450.0,
+                            "total_produzido_saida": 100.0,
+                            "total_rejeitos_perdas": 10.0
+                        },
+                        "indicadores_desempenho": {"aproveitamento_percentual": 22.22},
+                        "detalhado_por_turno": []
+                    }
+                }
+            }
+        }
+    },
+)
 def Dashboard_diario():
     total_entrada = sum(item["quantidade_entrada_kg"] for item in producao_db)
     total_saida = sum(item["quantidade_saida_kg"] for item in producao_db)

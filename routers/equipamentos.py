@@ -1,14 +1,14 @@
 from fastapi import APIRouter, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # cria o roteador focado nas esteiras e no chão da fábrica
 router = APIRouter (prefix="/api", tags=["Equipamentos"])
 
 # modelo de integridade
 class EquipamentoUpdate(BaseModel):
-    temperatura: float # temperatura do motor em ºC
-    peso_atual_kg: float # carga de peso da esteira
-    travada: bool # True se houver travamento mecânico
+    temperatura: float = Field(description="Temperatura do motor, em ºC. Acima de 50.0 gera alerta de superaquecimento.", examples=[38.5]) # temperatura do motor em ºC
+    peso_atual_kg: float = Field(description="Carga de peso da esteira, em kg. Acima de 500.0 gera alerta de sobrecarga.", examples=[120.0]) # carga de peso da esteira
+    travada: bool = Field(description="`true` se houver travamento mecânico (gera alerta e desliga a esteira).", examples=[False]) # True se houver travamento mecânico
 
 # integração com o banco de dados
 equipamentos_db = {
@@ -21,13 +21,55 @@ equipamentos_db = {
 }
 
 # consultar status do equipamentos e dados
-@router.get("/equipamentos")
+@router.get(
+    "/equipamentos",
+    summary="Consultar status da esteira",
+    description="Retorna o estado atual da esteira: nome, status operacional, temperatura, peso atual e se está travada.",
+    response_description="Estado atual do equipamento.",
+)
 def consultar_equipamentos():
 
     return equipamentos_db
 
 # atualizar status da esteira
-@router.post("/equipamentos/status", status_code=status.HTTP_200_OK)
+@router.post(
+    "/equipamentos/status",
+    status_code=status.HTTP_200_OK,
+    summary="Atualizar leituras da esteira",
+    description=(
+        "Recebe as leituras do sensor físico (via middleware em PHP), avalia as regras de segurança "
+        "e atualiza o estado da esteira.\n\n"
+        "**Regras de segurança:**\n"
+        "- `peso_atual_kg` > 500.0 → alerta de sobrecarga de peso\n"
+        "- `temperatura` > 50.0 → alerta de superaquecimento do motor\n"
+        "- `travada` = true → alerta de esteira travada por segurança\n\n"
+        "Se houver qualquer alerta, o status da esteira passa a `ESTEIRA DESLIGADA`; "
+        "caso contrário, permanece `LIGADA`."
+    ),
+    response_description="Leituras processadas, com alertas e ação tomada.",
+    responses={
+        200: {
+            "content": {
+                "application/json": {
+                    "example": {
+                        "mensagem": "Dados do middleware processados com sucesso",
+                        "estado_atual": {
+                            "id_esteira": 1,
+                            "nome": "Esteira Principal de Separação",
+                            "status_operacional": "ESTEIRA DESLIGADA",
+                            "temperatura": 55.0,
+                            "peso_atual_kg": 120.0,
+                            "travada": False
+                        },
+                        "alertas_seguranca": ["ALERTA! SUPERAQUECIMENTO DO MOTOR"],
+                        "acao_tomada": "DESLIGAMENTOS DE SEGURANÇA ACIONADO"
+                    }
+                }
+            }
+        },
+        422: {"description": "Erro de validação: campo obrigatório ausente ou com tipo inválido."},
+    },
+)
 def atualizar_dados_esteira(dados: EquipamentoUpdate):
 
     # ponte com o middleware em php, recebe as leituras do sensor físico para avaliação dentro da api
