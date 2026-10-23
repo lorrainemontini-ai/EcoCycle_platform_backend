@@ -1,13 +1,9 @@
-from fastapi import APIRouter , HTTPException, status 
-from pydantic import BaseModel
+from fastapi import APIRouter , HTTPException, status
+# Modelo movido para schemas; importação preserva o acesso pelo módulo original.
+from schemas.auth import LoginRequest
 
 # para autenticação criamos o rotedor aqui
 router = APIRouter(prefix="/api", tags=["Autenticação e Segurança"])
-
-# exigência de que o 'usuário' e 'senha' sejam preenchidos
-class LoginRequest(BaseModel):
-    usuario: str
-    senha: str
 
 # validação do usuário para saber o nível de acesso permitido
 @router.post("/login", status_code=status.HTTP_200_OK)

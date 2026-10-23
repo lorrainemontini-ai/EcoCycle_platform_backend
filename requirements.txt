@@ -1,0 +1,8 @@
+# Dependências diretas verificadas com Python 3.13.2.
+fastapi==0.159.1
+uvicorn==0.54.0
+pydantic==2.14.1
+supabase==2.33.0
+python-dotenv==1.2.4
+# Usado pelo TestClient e pelo transporte do cliente Supabase.
+httpx==0.28.1

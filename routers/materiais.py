@@ -1,19 +1,14 @@
 from fastapi import APIRouter, status
-from pydantic import BaseModel
+# Modelo movido para schemas; importação preserva o acesso pelo módulo original.
+from schemas.materiais import MaterialCreate
 
 #cria o roteador de materiais
 router = APIRouter(prefix="/api", tags=["Materiais"])
 
-#modela os dados e informações do material
-class  MaterialCreate(BaseModel):
-    tipo: str # plástico ou metal
-    classificacao: str # PET, PEAD, alumínio, ferro
-    destino: str # esteira e setor
-
-#integração ao banco de dados
+# Armazenamento simulado em memória; ainda não persiste no Supabase.
 materiais_db = [
     {"id_material": 1, "tipo": "Plástico", "Classificação": "PET / PEAD", "destino": "Esteira 01"},
-    
+
 ]
 
 # consulta todo o estoque de materiais
